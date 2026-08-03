@@ -320,10 +320,12 @@ elif menu == "📜 Histórico e Extrato de Cliente":
             st.write(
                 f"**📅 Data de Entrada:** {cliente_atual.get('dataentrada')}"
             )
-            st.write(
-                f"**🚪 Data de Saída:** {cliente_atual.get('datasaida') or 'Em"
-                " Andamento / Na Oficina'}"
+            saida_texto = (
+                cliente_atual.get("datasaida")
+                if cliente_atual.get("datasaida")
+                else "Em Andamento / Na Oficina"
             )
+            st.write(f"**🚪 Data de Saída:** {saida_texto}")
 
           st.info(
               "Histórico de movimentações registrado com sucesso na nuvem para"
