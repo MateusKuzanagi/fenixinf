@@ -231,7 +231,7 @@ elif menu == "📄 Ordem de Serviço":
 
     if clientes:
       opcoes_os_dict = {
-          f"ID: {c.get('id')} - {c.get('nome')} ({c.get('modeloaparelho', 'Sem Aparelho')})": c
+          f"Cliente: {c.get('nome')} - Aparelho: {c.get('modeloaparelho', 'Sem Aparelho')}": c
           for c in clientes
       }
       escolha_os_label = st.selectbox(
@@ -318,10 +318,9 @@ elif menu == "📄 Ordem de Serviço":
               {"qtdestoque": max(0, novo_estoque)}
           ).eq("id", pid_str).execute()
 
-        # Salva o atendimento na tabela de histórico para consulta unificada
+        # Salva o atendimento na tabela garantindo o nome do cliente
         try:
           supabase.table("HistoricoAtendimentos").insert({
-              "cliente_id": str(cli_os.get("id")),
               "cliente_nome": cli_os.get("nome"),
               "tipo": "Ordem de Serviço",
               "detalhes": (
@@ -332,8 +331,11 @@ elif menu == "📄 Ordem de Serviço":
               "pagamento": forma_pagto,
               "data": datetime.now().strftime("%d/%m/%Y %H:%M"),
           }).execute()
-        except Exception:
-          pass  # Se a tabela não existir, apenas prossegue com o PDF
+        except Exception as e:
+          st.warning(
+              "Nota: A tabela 'HistoricoAtendimentos' precisa ser criada no"
+              f" Supabase para salvar o extrato automático. Erro: {e}"
+          )
 
         buffer = io.BytesIO()
         p = canvas.Canvas(buffer, pagesize=letter)
@@ -398,11 +400,11 @@ elif menu == "📄 Ordem de Serviço":
         p.save()
         buffer.seek(0)
 
-        st.success("🎉 O.S. gerada com sucesso, salva no histórico e estoque baixado!")
+        st.success("🎉 O.S. gerada com sucesso e estoque baixado!")
         st.download_button(
             label="📥 Baixar PDF da Ordem de Serviço",
             data=buffer,
-            file_name=f"OS_Cliente_{cli_os.get('id', 'geral')}.pdf",
+            file_name=f"OS_Cliente_{cli_os.get('nome')}.pdf",
             mime="application/pdf",
             use_container_width=True,
         )
@@ -422,7 +424,7 @@ elif menu == "🧾 Nota Fiscal (PDF)":
     clientes = res.data or []
     if clientes:
       opcoes_nf_dict = {
-          f"ID: {c.get('id')} - {c.get('nome')} ({c.get('modeloaparelho', 'Sem Aparelho')})": c
+          f"Cliente: {c.get('nome')} - Aparelho: {c.get('modeloaparelho', 'Sem Aparelho')}": c
           for c in clientes
       }
       escolha_nf = st.selectbox(
@@ -464,10 +466,8 @@ elif menu == "🧾 Nota Fiscal (PDF)":
       if submitted_nf or "gerar_nf_pdf" in st.session_state:
         st.session_state.gerar_nf_pdf = True
 
-        # Salva o atendimento na tabela de histórico
         try:
           supabase.table("HistoricoAtendimentos").insert({
-              "cliente_id": str(cli_nf.get("id")),
               "cliente_nome": cli_nf.get("nome"),
               "tipo": "Nota Fiscal",
               "detalhes": desc_servico,
@@ -527,11 +527,11 @@ elif menu == "🧾 Nota Fiscal (PDF)":
         p.save()
         buffer_nf.seek(0)
 
-        st.success("🎉 Nota Fiscal gerada, salva no histórico e pronta para download!")
+        st.success("🎉 Nota Fiscal gerada e pronta para download!")
         st.download_button(
             label="📥 Baixar Nota Fiscal em PDF",
             data=buffer_nf,
-            file_name=f"Nota_Fiscal_{cli_nf.get('id', 'geral')}.pdf",
+            file_name=f"Nota_Fiscal_{cli_nf.get('nome')}.pdf",
             mime="application/pdf",
             use_container_width=True,
         )
@@ -557,7 +557,7 @@ elif menu == "💬 Histórico & WhatsApp":
 
     if clientes:
       opcoes_hist = {
-          f"ID: {c.get('id')} - {c.get('nome')} ({c.get('modeloaparelho', 'Sem Aparelho')})": c
+          f"Cliente: {c.get('nome')} - Aparelho: {c.get('modeloaparelho', 'Sem Aparelho')}": c
           for c in clientes
       }
       escolha_h = st.selectbox(
@@ -583,21 +583,21 @@ elif menu == "💬 Histórico & WhatsApp":
       st.markdown("---")
       st.subheader("📋 Histórico Completo de Compras e Ordens de Serviço")
 
-      # Busca na tabela de histórico unificada
+      # Busca direto pelo nome do cliente para garantir o vínculo correto
+      historico_dados = []
       try:
         res_hist = (
             supabase.table("HistoricoAtendimentos")
             .select("*")
-            .eq("cliente_id", str(cli_hist.get("id")))
+            .eq("cliente_nome", cli_hist.get("nome"))
             .execute()
         )
         historico_dados = res_hist.data or []
       except Exception:
-        historico_dados = []
+        pass
 
       if historico_dados:
         df_hist = pd.DataFrame(historico_dados)
-        # Exibe a tabela organizada
         st.dataframe(
             df_hist[[
                 "data",
@@ -609,7 +609,6 @@ elif menu == "💬 Histórico & WhatsApp":
             use_container_width=True,
         )
 
-        # Resumo Financeiro Total por Forma de Pagamento
         total_geral_cliente = sum(
             [float(h.get("valor", 0) or 0) for h in historico_dados]
         )
@@ -618,8 +617,10 @@ elif menu == "💬 Histórico & WhatsApp":
         )
       else:
         st.info(
-            "Nenhum registro de atendimento ou compra encontrado para este"
-            " cliente ainda."
+            "⚠️ Nenhum registro encontrado na tabela 'HistoricoAtendimentos'"
+            " para este cliente. (Certifique-se de criar essa tabela no seu"
+            " painel do Supabase com as colunas: id, cliente_nome, tipo,"
+            " detalhes, valor, pagamento, data)."
         )
 
       st.markdown("---")
