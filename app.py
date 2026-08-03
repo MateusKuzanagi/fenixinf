@@ -13,16 +13,12 @@ st.set_page_config(
     page_title="Fênix • Gestão Inteligente", page_icon="⚡", layout="wide"
 )
 
-# Injeção de CSS customizado para um design moderno, elegante e limpo
 st.markdown(
     """
     <style>
-        /* Fundo geral e fontes */
         .main {
             background-color: #f8fafc;
         }
-        
-        /* Cartões de métricas customizados */
         .metric-card {
             background-color: #ffffff;
             border: 1px solid #e2e8f0;
@@ -31,8 +27,6 @@ st.markdown(
             box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
             text-align: center;
         }
-        
-        /* Estilização da barra lateral */
         [data-testid="stSidebar"] {
             background-color: #0f172a;
             color: #ffffff;
@@ -40,8 +34,6 @@ st.markdown(
         [data-testid="stSidebar"] * {
             color: #e2e8f0 !important;
         }
-        
-        /* Botões principais */
         .stButton>button {
             border-radius: 8px;
             font-weight: 600;
@@ -129,6 +121,7 @@ menu = st.sidebar.radio(
         "👥 Clientes e Edição de Cadastros",
         "➕ Novo Cadastro (Produto/Cliente)",
         "📄 Ordens de Serviço Customizadas",
+        "🧾 Gerar Nota Fiscal (PDF)",
     ],
 )
 
@@ -524,7 +517,6 @@ elif menu == "📄 Ordens de Serviço Customizadas":
             buffer = io.BytesIO()
             p = canvas.Canvas(buffer, pagesize=letter)
 
-            # Cabeçalho corporativo do PDF
             p.setFont("Helvetica-Bold", 16)
             p.drawString(
                 50, 750, "FÊNIX • ASSISTÊNCIA TÉCNICA E SOLUÇÕES CORPORATIVAS"
@@ -535,7 +527,6 @@ elif menu == "📄 Ordens de Serviço Customizadas":
             )
             p.line(50, 725, 560, 725)
 
-            # Dados do Cliente
             p.setFont("Helvetica-Bold", 12)
             p.drawString(50, 695, "1. Dados do Cliente:")
             p.setFont("Helvetica", 10)
@@ -543,7 +534,6 @@ elif menu == "📄 Ordens de Serviço Customizadas":
             p.drawString(50, 660, f"Telefone: {cli_os.get('telefone', '')}")
             p.drawString(50, 645, f"Endereço: {cli_os.get('endereco', '')}")
 
-            # Especificações
             p.setFont("Helvetica-Bold", 12)
             p.drawString(50, 615, "2. Especificações do Aparelho:")
             p.setFont("Helvetica", 10)
@@ -560,7 +550,6 @@ elif menu == "📄 Ordens de Serviço Customizadas":
                 50, 565, f"Data de Entrada: {cli_os.get('dataentrada', '')}"
             )
 
-            # Relatório técnico e valores
             p.setFont("Helvetica-Bold", 12)
             p.drawString(50, 535, "3. Relatório e Custos:")
             p.setFont("Helvetica", 10)
@@ -573,7 +562,6 @@ elif menu == "📄 Ordens de Serviço Customizadas":
                 f" {prazo_entrega}",
             )
 
-            # Rodapé / Termos
             p.line(50, 440, 560, 440)
             p.setFont("Helvetica-Oblique", 8)
             p.drawString(
@@ -602,3 +590,186 @@ elif menu == "📄 Ordens de Serviço Customizadas":
       st.info("Nenhum cliente cadastrado para gerar O.S.")
   except Exception as e:
     st.error(f"Erro ao gerar relatório PDF: {e}")
+
+# ==========================================
+# 6. GERAR NOTA FISCAL (PDF)
+# ==========================================
+elif menu == "🧾 Gerar Nota Fiscal (PDF)":
+  st.markdown("## 🧾 Emissor de Nota Fiscal de Serviços (PDF)")
+  st.markdown(
+      "Preencha os campos fiscais, impostos e discriminação para emitir a"
+      " Nota Fiscal do cliente."
+  )
+  st.markdown("---")
+
+  try:
+    res = supabase.table("Clientes").select("*").execute()
+    clientes = res.data or []
+
+    if clientes:
+      opcoes_nf = [
+          f"{c.get('id')} - {c.get('nome')} ({c.get('modeloaparelho')})"
+          for c in clientes
+      ]
+      escolha_cli_nf = st.selectbox(
+          "Selecione o Cliente para faturamento:", opcoes_nf
+      )
+
+      if escolha_cli_nf:
+        id_cli_nf = int(escolha_cli_nf.split(" - ")[0])
+        cli_nf = next((c for c in clientes if c.get("id") == id_cli_nf), None)
+
+        if cli_nf:
+          with st.form("form_emissao_nf"):
+            st.subheader("📋 Informações Fiscais e do Tomador")
+            c1, c2 = st.columns(2)
+            with c1:
+              doc_cliente = st.text_input(
+                  "CPF / CNPJ do Tomador:", value="000.000.000-00"
+              )
+              inscricao_mun = st.text_input(
+                  "Inscrição Municipal (Opcional):", value=""
+              )
+              email_nf = st.text_input("E-mail para Envio:", value="")
+            with c2:
+              numero_nf = st.text_input(
+                  "Número da Nota Fiscal:",
+                  value=datetime.now().strftime("2026%m%d01"),
+              )
+              data_emissao = st.text_input(
+                  "Data de Emissão:",
+                  value=datetime.now().strftime("%d/%m/%Y %H:%M"),
+              )
+              natureza_operacao = st.text_input(
+                  "Natureza da Operação:",
+                  value="Prestação de Serviços de Manutenção",
+              )
+
+            st.markdown("---")
+            st.subheader("💼 Discriminação dos Serviços e Valores")
+            discriminacao = st.text_area(
+                "Discriminação dos Serviços Executados:",
+                value=(
+                    f"Serviço técnico especializado prestado no equipamento"
+                    f" {cli_nf.get('tipoaparelho')} -"
+                    f" {cli_nf.get('modeloaparelho')} (Série/IMEI:"
+                    f" {cli_nf.get('numeroserieimei')})."
+                ),
+            )
+
+            c3, c4, c5 = st.columns(3)
+            with c3:
+              valor_servicos = st.number_input(
+                  "Valor dos Serviços (R$):",
+                  min_value=0.0,
+                  value=150.0,
+                  format="%.2f",
+              )
+            with c4:
+              aliquota_iss = st.number_input(
+                  "Alíquota ISS (%):",
+                  min_value=0.0,
+                  value=5.0,
+                  format="%.2f",
+              )
+            with c5:
+              outras_deducoes = st.number_input(
+                  "Descontos / Deduções (R$):",
+                  min_value=0.0,
+                  value=0.0,
+                  format="%.2f",
+              )
+
+            btn_gerar_nf = st.form_submit_button(
+                "🖨️ Processar e Gerar Nota Fiscal PDF"
+            )
+
+          if btn_gerar_nf:
+            val_liquido = valor_servicos - outras_deducoes
+            val_iss = val_liquido * (aliquota_iss / 100.0)
+
+            buffer_nf = io.BytesIO()
+            p = canvas.Canvas(buffer_nf, pagesize=letter)
+
+            # Cabeçalho da NF
+            p.setFont("Helvetica-Bold", 14)
+            p.drawString(
+                50, 750, "PREFEITURA MUNICIPAL • NOTA FISCAL DE SERVIÇOS (NFS-e)"
+            )
+            p.setFont("Helvetica", 9)
+            p.drawString(50, 735, "Fênix Assistência Técnica e Soluções Ltda")
+            p.drawString(
+                50, 722, "CNPJ: 00.000.000/0001-00 | Inscrição Municipal: 123456"
+            )
+            p.line(50, 712, 560, 712)
+
+            # Dados da Nota
+            p.setFont("Helvetica-Bold", 11)
+            p.drawString(50, 692, f"Nota Fiscal Nº: {numero_nf}")
+            p.setFont("Helvetica", 10)
+            p.drawString(300, 692, f"Data/Hora Emissão: {data_emissao}")
+            p.drawString(50, 677, f"Natureza da Operação: {natureza_operacao}")
+
+            # Tomador
+            p.line(50, 667, 560, 667)
+            p.setFont("Helvetica-Bold", 11)
+            p.drawString(50, 647, "IDENTIFICAÇÃO DO TOMADOR DE SERVIÇOS")
+            p.setFont("Helvetica", 10)
+            p.drawString(50, 627, f"Nome/Razão Social: {cli_nf.get('nome')}")
+            p.drawString(50, 612, f"CPF/CNPJ: {doc_cliente}")
+            p.drawString(50, 597, f"Endereço: {cli_nf.get('endereco')}")
+            p.drawString(300, 597, f"Telefone: {cli_nf.get('telefone')}")
+
+            # Discriminação
+            p.line(50, 582, 560, 582)
+            p.setFont("Helvetica-Bold", 11)
+            p.drawString(50, 562, "DISCRIMINAÇÃO DOS SERVIÇOS")
+            p.setFont("Helvetica", 10)
+
+            # Quebra simples do texto de discriminação no PDF se for longo
+            text_object = p.beginText(50, 542)
+            text_object.setFont("Helvetica", 10)
+            for linha in discriminacao.split("\n"):
+              text_object.textLine(linha)
+            p.drawText(text_object)
+
+            # Valores e Impostos
+            p.line(50, 440, 560, 440)
+            p.setFont("Helvetica-Bold", 11)
+            p.drawString(50, 420, "VALORES E TRIBUTOS")
+            p.setFont("Helvetica", 10)
+            p.drawString(50, 400, f"Valor dos Serviços: R$ {valor_servicos:.2f}")
+            p.drawString(250, 400, f"Deduções: R$ {outras_deducoes:.2f}")
+            p.drawString(400, 400, f"Valor Líquido: R$ {val_liquido:.2f}")
+            p.drawString(
+                50,
+                380,
+                f"Alíquota ISS: {aliquota_iss:.2f}% | Valor do ISS: R$"
+                f" {val_iss:.2f}",
+            )
+
+            # Rodapé
+            p.line(50, 330, 560, 330)
+            p.setFont("Helvetica-Oblique", 8)
+            p.drawString(
+                50,
+                315,
+                "Documento emitido por sistema eletrônico de gestão Fênix."
+                " Válido como comprovante fiscal de prestação de serviços.",
+            )
+
+            p.showPage()
+            p.save()
+            buffer_nf.seek(0)
+
+            st.success("🎉 Nota Fiscal gerada com sucesso!")
+            st.download_button(
+                label="📥 Baixar Nota Fiscal em PDF",
+                data=buffer_nf,
+                file_name=f"Nota_Fiscal_{numero_nf}.pdf",
+                mime="application/pdf",
+            )
+    else:
+      st.info("Nenhum cliente cadastrado para gerar Nota Fiscal.")
+  except Exception as e:
+    st.error(f"Erro ao gerar Nota Fiscal: {e}")
