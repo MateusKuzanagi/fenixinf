@@ -1,5 +1,6 @@
 from datetime import datetime
 import io
+import urllib.parse
 import pandas as pd
 from reportlab.lib.pagesizes import letter
 from reportlab.pdfgen import canvas
@@ -137,6 +138,7 @@ menu = st.sidebar.radio(
         "➕ Novo Cadastro (Produto/Cliente)",
         "📄 Ordens de Serviço Customizadas",
         "🧾 Gerar Nota Fiscal (PDF)",
+        "💬 Histórico e Envio WhatsApp",
     ],
 )
 
@@ -804,3 +806,94 @@ elif menu == "🧾 Gerar Nota Fiscal (PDF)":
       st.info("Nenhum cliente cadastrado para gerar Nota Fiscal.")
   except Exception as e:
     st.error(f"Erro ao gerar Nota Fiscal: {e}")
+
+# ==========================================
+# 7. HISTÓRICO E ENVIO WHATSAPP
+# ==========================================
+elif menu == "💬 Histórico e Envio WhatsApp":
+  st.markdown("## 💬 Histórico de Compras/Serviços e Envio via WhatsApp")
+  st.markdown(
+      "Visualize o histórico detalhado do cliente e envie mensagens"
+      " automáticas direto pelo WhatsApp."
+  )
+  st.markdown("---")
+
+  try:
+    res = supabase.table("Clientes").select("*").execute()
+    clientes = res.data or []
+
+    if clientes:
+      opcoes_hist_dict = {}
+      for c in clientes:
+        cid = c.get("id", "S/ID")
+        cnome = c.get("nome", "Sem Nome")
+        camarelho = c.get("modeloaparelho", "Sem Aparelho")
+        rotulo = f"ID: {cid} - {cnome} ({camarelho})"
+        opcoes_hist_dict[rotulo] = c
+
+      escolha_hist_label = st.selectbox(
+          "Selecione o Cliente para consultar o histórico:",
+          list(opcoes_hist_dict.keys()),
+      )
+
+      if escolha_hist_label:
+        cli_hist = opcoes_hist_dict[escolha_hist_label]
+
+        st.markdown(f"### 📋 Prontuário de: {cli_hist.get('nome', '')}")
+        col_h1, col_h2 = st.columns(2)
+
+        with col_h1:
+          st.info(f"📱 **Telefone/WhatsApp:** {cli_hist.get('telefone', '')}")
+          st.info(f"🏠 **Endereço:** {cli_hist.get('endereco', '')}")
+        with col_h2:
+          st.info(
+              f"💻 **Aparelho:** {cli_hist.get('tipoaparelho', '')} -"
+              f" {cli_hist.get('modeloaparelho', '')}"
+          )
+          st.info(
+              f"📅 **Data de Entrada:** {cli_hist.get('dataentrada', '')}"
+          )
+
+        st.markdown("---")
+        st.subheader("🚀 Ações de Envio Automático via WhatsApp")
+
+        # Mensagem padrão personalizada para o cliente
+        nome_cliente = cli_hist.get("nome", "Cliente")
+        telefone_cliente = "".join(
+            filter(str.isdigit, str(cli_hist.get("telefone", "")))
+        )
+        aparelho = cli_hist.get("modeloaparelho", "seu equipamento")
+
+        texto_msg = (
+            f"Olá {nome_cliente}, aqui é da Fênix Assistência Técnica! ⚡\n\n"
+            f"Estamos entrando em contato referente ao seu histórico de atendimento"
+            f" do aparelho *{aparelho}*.\n"
+            f"Data de entrada: {cli_hist.get('dataentrada', 'N/D')}.\n\n"
+            f"Qualquer dúvida estamos à disposição!"
+        )
+
+        texto_codificado = urllib.parse.quote(texto_msg)
+        link_whatsapp = f"https://wa.me/55{telefone_cliente}?text={texto_codificado}"
+
+        c_w1, c_w2 = st.columns(2)
+        with c_w1:
+          st.markdown(
+              f"""
+                    <a href="{link_whatsapp}" target="_blank">
+                        <button style="width: 100%; background-color: #25d366; color: white; padding: 0.6rem; border: none; border-radius: 8px; font-weight: bold; cursor: pointer; box-shadow: 0 4px 12px rgba(37, 211, 102, 0.3);">
+                            💬 Abrir WhatsApp com Mensagem Pronta
+                        </button>
+                    </a>
+                    """,
+              unsafe_allow_html=True,
+          )
+        with c_w2:
+          st.success(
+              "💡 *Dica:* Baixe o PDF da Ordem de Serviço ou Nota Fiscal no menu"
+              " correspondente e envie o arquivo junto no chat do WhatsApp."
+          )
+
+    else:
+      st.info("Nenhum cliente cadastrado no momento.")
+  except Exception as e:
+    st.error(f"Erro ao carregar histórico: {e}")
