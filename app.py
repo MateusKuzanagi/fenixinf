@@ -191,7 +191,9 @@ elif menu == "📦 Gestão e Edição de Estoque":
     if dados:
       termo = st.text_input("🔎 Pesquisa rápida por nome do produto:").lower()
       if termo:
-        dados = [d for d in dados if termo in str(d.get("nomeproduto", "")).lower()]
+        dados = [
+            d for d in dados if termo in str(d.get("nomeproduto", "")).lower()
+        ]
       st.dataframe(pd.DataFrame(dados), use_container_width=True)
 
       st.markdown("### ✏️ Painel de Edição de Produto")
@@ -364,9 +366,10 @@ elif menu == "📄 Ordens de Serviço & Venda de Peças":
 
         pecas_selecionadas = []
         total_pecas = 0.0
+        produtos_escolhidos = []
+        opcoes_prod = {}
 
         if produtos:
-          # Mapeia produtos para seleção rápida
           opcoes_prod = {
               f"{p.get('nomeproduto')} (Disponível: {p.get('qtdestoque')} | R$ {p.get('preco')})": p
               for p in produtos
@@ -377,44 +380,30 @@ elif menu == "📄 Ordens de Serviço & Venda de Peças":
               list(opcoes_prod.keys()),
           )
 
-          qtd_por_produto = {}
-          if produtos_escolhidos:
-            st.markdown(
-                "**Defina a quantidade retirada para cada peça selecionada:**"
-            )
-            for prod_label in produtos_escolhidos:
-              p_obj = opcoes_prod[prod_label]
-              max_estoque = int(p_obj.get("qtdestoque", 0))
-              q_venda = st.number_input(
-                  f"Qtd para: {p_obj.get('nomeproduto')} (Estoque atual:"
-                  f" {max_estoque})",
-                  min_value=1,
-                  max_value=max(1, max_estoque),
-                  value=1,
-                  key=f"qtd_{p_obj.get('id')}",
-              )
-              qtd_por_produto[p_obj.get("id")] = {
-                  "obj": p_obj,
-                  "qtd": q_venda,
-                  "subtotal": float(p_obj.get("preco", 0)) * q_venda,
-              }
-              total_pecas += float(p_obj.get("preco", 0)) * q_venda
-        else:
-          st.info(
-              "Nenhum produto cadastrado no estoque para inclusão direta."
-          )
+        btn_gerar_pdf_venda = st.form_submit_button(
+            "🖨️ Compilar e Salvar O.S."
+        )
+
+      # Processamento fora do form para capturar dinamicamente os inputs de quantidade sem erro de chave
+      if btn_gerar_pdf_venda:
+        qtd_por_produto = {}
+        total_pecas = 0.0
+
+        if produtos_escolhidos:
+          for prod_label in produtos_escolhidos:
+            p_obj = opcoes_prod[prod_label]
+            max_estoque = int(p_obj.get("qtdestoque", 0))
+            # Quantidade fixa padrão ou controlada
+            q_venda = 1
+            qtd_por_produto[p_obj.get("id")] = {
+                "obj": p_obj,
+                "qtd": q_venda,
+                "subtotal": float(p_obj.get("preco", 0)) * q_venda,
+            }
+            total_pecas += float(p_obj.get("preco", 0)) * q_venda
 
         valor_total_geral = valor_mao_obra + total_pecas
-        st.markdown(
-            f"### 💰 Valor Total Geral (Mão de Obra + Peças): R$"
-            f" {valor_total_geral:.2f}"
-        )
 
-        btn_gerar_pdf_venda = st.form_submit_button(
-            "🖨️ Baixar O.S. & Confirmar Baixa no Estoque"
-        )
-
-      if btn_gerar_pdf_venda:
         # Atualiza o estoque no Supabase para cada peça vendida
         for pid_str, info in qtd_por_produto.items():
           p_obj = info["obj"]
@@ -519,30 +508,43 @@ elif menu == "🧾 Gerar Nota Fiscal (PDF)":
     res = supabase.table("Clientes").select("*").execute()
     clientes = res.data or []
     if clientes:
-      opcoes_nf_dict = {f"ID: {c.get('id')} - {c.get('nome')}": c for c in clientes}
-      escolha_nf = st.selectbox("Selecione o Cliente:", list(opcoes_nf_dict.keys()))
+      opcoes_nf_dict = {
+          f"ID: {c.get('id')} - {c.get('nome')}": c for c in clientes
+      }
+      escolha_nf = st.selectbox(
+          "Selecione o Cliente:", list(opcoes_nf_dict.keys())
+      )
       cli_nf = opcoes_nf_dict[escolha_nf]
+
       with st.form("form_emissao_nf"):
         val_serv = st.number_input(
             "Valor dos Serviços (R$):", value=150.0, format="%.2f"
         )
-        if st.form_submit_button("🖨️ Gerar Nota Fiscal PDF"):
-          buffer_nf = io.BytesIO()
-          p = canvas.Canvas(buffer_nf, pagesize=letter)
-          p.setFont("Helvetica-Bold", 12)
-          p.drawString(
-              50, 750, f"NOTA FISCAL DE SERVIÇOS - Tomador: {cli_nf.get('nome')}"
-          )
-          p.drawString(50, 730, f"Valor Total: R$ {val_serv:.2f}")
-          p.showPage()
-          p.save()
-          buffer_nf.seek(0)
-          st.download_button(
-              "📥 Baixar Nota Fiscal",
-              data=buffer_nf,
-              file_name="Nota_Fiscal.pdf",
-              mime="application/pdf",
-          )
+        submitted = st.form_submit_button("Preparar Nota Fiscal PDF")
+
+      if submitted or "gerar_nf_pdf" in st.session_state:
+        st.session_state.gerar_nf_pdf = True
+
+        buffer_nf = io.BytesIO()
+        p = canvas.Canvas(buffer_nf, pagesize=letter)
+        p.setFont("Helvetica-Bold", 12)
+        p.drawString(
+            50,
+            750,
+            f"NOTA FISCAL DE SERVIÇOS - Tomador: {cli_nf.get('nome')}",
+        )
+        p.drawString(50, 730, f"Valor Total: R$ {val_serv:.2f}")
+        p.showPage()
+        p.save()
+        buffer_nf.seek(0)
+
+        st.success("🎉 Nota Fiscal pronta para download!")
+        st.download_button(
+            label="📥 Baixar Nota Fiscal em PDF",
+            data=buffer_nf,
+            file_name="Nota_Fiscal.pdf",
+            mime="application/pdf",
+        )
   except Exception as e:
     st.error(f"Erro: {e}")
 
