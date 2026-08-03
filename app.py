@@ -7,45 +7,60 @@ import streamlit as st
 from supabase import Client, create_client
 
 # ==========================================
-# CONFIGURAÇÃO DA PÁGINA E ESTILIZAÇÃO CSS
+# CONFIGURAÇÃO DA PÁGINA E ESTILIZAÇÃO TECNOLÓGICA
 # ==========================================
 st.set_page_config(
-    page_title="Fênix • Gestão Inteligente", page_icon="⚡", layout="wide"
+    page_title="Fênix • Gestão Tecnológica", page_icon="⚡", layout="wide"
 )
 
 st.markdown(
     """
     <style>
+        /* Fundo geral da aplicação - Tom tecnológico claro/limpo */
         .main {
-            background-color: #f8fafc;
+            background-color: #f4f7fc;
         }
+        
+        /* Cartões de métricas estilo Glassmorphism / Tech */
         .metric-card {
-            background-color: #ffffff;
-            border: 1px solid #e2e8f0;
+            background: linear-gradient(135deg, #ffffff 0%, #f8fafc 100%);
+            border: 1px solid #cbd5e1;
+            border-left: 5px solid #0ea5e9;
             padding: 20px;
             border-radius: 12px;
-            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
+            box-shadow: 0 10px 15px -3px rgba(14, 165, 233, 0.08);
             text-align: center;
+            transition: all 0.3s ease;
         }
+        .metric-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 14px 20px -3px rgba(14, 165, 233, 0.15);
+        }
+        
+        /* Barra lateral estilo Painel Tech (Azul Noite Profundo) */
         [data-testid="stSidebar"] {
-            background-color: #0f172a;
+            background: linear-gradient(180deg, #0b132b 0%, #1c2541 100%);
             color: #ffffff;
+            border-right: 1px solid #3a506b;
         }
         [data-testid="stSidebar"] * {
-            color: #e2e8f0 !important;
+            color: #e0f2fe !important;
         }
+        
+        /* Botões modernos com destaque tecnológico */
         .stButton>button {
             border-radius: 8px;
             font-weight: 600;
-            background-color: #2563eb;
+            background: linear-gradient(90deg, #0ea5e9 0%, #2563eb 100%);
             color: white;
             border: none;
             padding: 0.5rem 1rem;
             transition: all 0.3s ease;
+            box-shadow: 0 4px 12px rgba(14, 165, 233, 0.3);
         }
         .stButton>button:hover {
-            background-color: #1d4ed8;
-            box-shadow: 0 4px 12px rgba(37, 99, 235, 0.2);
+            background: linear-gradient(90deg, #0284c7 0%, #1d4ed8 100%);
+            box-shadow: 0 6px 16px rgba(14, 165, 233, 0.5);
         }
     </style>
 """,
@@ -55,7 +70,7 @@ st.markdown(
 URL: str = "https://umkfhbyuawnymnltsdka.supabase.co"
 KEY: str = (
     "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6In"
-    "Vta2ZoYnl1YXdueW1ubHRzZGthIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODU3NTU4ODcs"
+    "Vta2ZoYnl1YXdueW1ubHRzZGthIiwicm9sZSI6InVub24iLCJpYXQiOjE3ODU3NTU4ODcs"
     "ImV4cCI6MjEwMTMzMTg4N30.XxPe6T-iGTvJjU-1txfxyD6148P3mKwOyqG5m6MHy7c"
 )
 
@@ -78,13 +93,13 @@ if not st.session_state.autenticado:
   with col2:
     st.markdown("<br><br>", unsafe_allow_html=True)
     st.markdown(
-        "<h2 style='text-align: center; color: #0f172a;'>🔥 Fênix • Gestão"
-        " Inteligente</h2>",
+        "<h2 style='text-align: center; color: #0b132b;'>⚡ Fênix • Gestão"
+        " Tecnológica</h2>",
         unsafe_allow_html=True,
     )
     st.markdown(
-        "<p style='text-align: center; color: #64748b;'>Entre com suas"
-        " credenciais para acessar o painel corporativo.</p>",
+        "<p style='text-align: center; color: #475569;'>Acesse o ecossistema"
+        " inteligente com suas credenciais.</p>",
         unsafe_allow_html=True,
     )
 
@@ -93,7 +108,7 @@ if not st.session_state.autenticado:
       senha = st.text_input("Senha", type="password").strip()
       st.markdown("<br>", unsafe_allow_html=True)
       btn_login = st.form_submit_button(
-          "Acessar Sistema", use_container_width=True
+          "Entrar no Sistema", use_container_width=True
       )
 
       if btn_login:
@@ -108,7 +123,7 @@ if not st.session_state.autenticado:
 # MENU LATERAL REFINADO
 # ==========================================
 st.sidebar.markdown(
-    "<h2 style='color: white; text-align: center;'>⚡ FÊNIX OS</h2>",
+    "<h2 style='color: #0ea5e9; text-align: center;'>⚡ FÊNIX TECH</h2>",
     unsafe_allow_html=True,
 )
 st.sidebar.markdown("---")
@@ -158,17 +173,17 @@ if menu == "📊 Dashboard Executivo":
     c1, c2, c3 = st.columns(3)
     with c1:
       st.markdown(
-          f"""<div class='metric-card'><h4>📦 Total Produtos</h4><h2>{total_produtos}</h2></div>""",
+          f"""<div class='metric-card'><h4 style='color: #334155;'>📦 Total Produtos</h4><h2 style='color: #0ea5e9;'>{total_produtos}</h2></div>""",
           unsafe_allow_html=True,
       )
     with c2:
       st.markdown(
-          f"""<div class='metric-card'><h4>👥 Base Clientes</h4><h2>{total_clientes}</h2></div>""",
+          f"""<div class='metric-card'><h4 style='color: #334155;'>👥 Base Clientes</h4><h2 style='color: #0ea5e9;'>{total_clientes}</h2></div>""",
           unsafe_allow_html=True,
       )
     with c3:
       st.markdown(
-          f"""<div class='metric-card'><h4>💰 Valor em Estoque</h4><h2>R$ {val_estoque:,.2f}</h2></div>""",
+          f"""<div class='metric-card'><h4 style='color: #334155;'>💰 Valor em Estoque</h4><h2 style='color: #0ea5e9;'>R$ {val_estoque:,.2f}</h2></div>""",
           unsafe_allow_html=True,
       )
 
@@ -306,17 +321,21 @@ elif menu == "👥 Clientes e Edição de Cadastros":
       st.dataframe(df_cli, use_container_width=True)
 
       st.markdown("### ✏️ Prontuário e Edição de Dados do Cliente")
-      opcoes_cli = [
-          f"{c.get('id')} - {c.get('nome')} ({c.get('modeloaparelho')})"
-          for c in clientes
-      ]
-      escolha_cli_edit = st.selectbox(
-          "Selecione o registro para edição:", opcoes_cli
+      opcoes_cli_dict = {}
+      for c in clientes:
+        cid = c.get("id", "S/ID")
+        cnome = c.get("nome", "Sem Nome")
+        camarelho = c.get("modeloaparelho", "Sem Aparelho")
+        rotulo = f"ID: {cid} - {cnome} ({camarelho})"
+        opcoes_cli_dict[rotulo] = c
+
+      escolha_cli_edit_label = st.selectbox(
+          "Selecione o registro para edição:", list(opcoes_cli_dict.keys())
       )
 
-      if escolha_cli_edit:
-        id_edit = int(escolha_cli_edit.split(" - ")[0])
-        c_atual = next((c for c in clientes if c.get("id") == id_edit), None)
+      if escolha_cli_edit_label:
+        c_atual = opcoes_cli_dict[escolha_cli_edit_label]
+        id_edit = c_atual.get("id")
 
         if c_atual:
           with st.form("form_edit_cliente"):
@@ -353,7 +372,7 @@ elif menu == "👥 Clientes e Edição de Cadastros":
                 "💾 Atualizar Dados do Cliente"
             )
             if btn_salvar_cli:
-              supabase.table("Clientes").update({
+              query = supabase.table("Clientes").update({
                   "nome": e_nome,
                   "telefone": e_tel,
                   "endereco": e_end,
@@ -362,7 +381,11 @@ elif menu == "👥 Clientes e Edição de Cadastros":
                   "numeroserieimei": e_imei,
                   "datasaida": e_saida,
                   "senhaaparelho": e_senha,
-              }).eq("id", id_edit).execute()
+              })
+              if id_edit is not None:
+                query.eq("id", id_edit).execute()
+              else:
+                query.eq("nome", e_nome).execute()
               st.success(
                   "✅ Cliente atualizado com sucesso! Atualize a página para"
                   " refletir as mudanças."
@@ -470,17 +493,20 @@ elif menu == "📄 Ordens de Serviço Customizadas":
     clientes = res.data or []
 
     if clientes:
-      opcoes_os = [
-          f"{c.get('id')} - {c.get('nome')} ({c.get('modeloaparelho')})"
-          for c in clientes
-      ]
-      escolha_os = st.selectbox(
-          "Selecione o Cliente para emitir a O.S.:", opcoes_os
+      opcoes_os_dict = {}
+      for c in clientes:
+        cid = c.get("id", "S/ID")
+        cnome = c.get("nome", "Sem Nome")
+        camarelho = c.get("modeloaparelho", "Sem Aparelho")
+        rotulo = f"ID: {cid} - {cnome} ({camarelho})"
+        opcoes_os_dict[rotulo] = c
+
+      escolha_os_label = st.selectbox(
+          "Selecione o Cliente para emitir a O.S.:", list(opcoes_os_dict.keys())
       )
 
-      if escolha_os:
-        id_os = int(escolha_os.split(" - ")[0])
-        cli_os = next((c for c in clientes if c.get("id") == id_os), None)
+      if escolha_os_label:
+        cli_os = opcoes_os_dict[escolha_os_label]
 
         if cli_os:
           st.markdown("### 📝 Ajustes Específicos para esta O.S.")
@@ -530,9 +556,15 @@ elif menu == "📄 Ordens de Serviço Customizadas":
             p.setFont("Helvetica-Bold", 12)
             p.drawString(50, 695, "1. Dados do Cliente:")
             p.setFont("Helvetica", 10)
-            p.drawString(50, 675, f"Cliente: {cli_os.get('nome', '')}")
-            p.drawString(50, 660, f"Telefone: {cli_os.get('telefone', '')}")
-            p.drawString(50, 645, f"Endereço: {cli_os.get('endereco', '')}")
+            p.drawString(
+                50, 675, f"Cliente: {cli_os.get('nome', 'Não informado')}"
+            )
+            p.drawString(
+                50, 660, f"Telefone: {cli_os.get('telefone', 'Não informado')}"
+            )
+            p.drawString(
+                50, 645, f"Endereço: {cli_os.get('endereco', 'Não informado')}"
+            )
 
             p.setFont("Helvetica-Bold", 12)
             p.drawString(50, 615, "2. Especificações do Aparelho:")
@@ -583,7 +615,9 @@ elif menu == "📄 Ordens de Serviço Customizadas":
             st.download_button(
                 label="📥 Baixar Documento PDF Oficial",
                 data=buffer,
-                file_name=f"OS_Fenix_Cliente_{cli_os.get('id')}.pdf",
+                file_name=(
+                    f"OS_Fenix_Cliente_{cli_os.get('id', 'geral')}.pdf"
+                ),
                 mime="application/pdf",
             )
     else:
@@ -607,17 +641,20 @@ elif menu == "🧾 Gerar Nota Fiscal (PDF)":
     clientes = res.data or []
 
     if clientes:
-      opcoes_nf = [
-          f"{c.get('id')} - {c.get('nome')} ({c.get('modeloaparelho')})"
-          for c in clientes
-      ]
-      escolha_cli_nf = st.selectbox(
-          "Selecione o Cliente para faturamento:", opcoes_nf
+      opcoes_nf_dict = {}
+      for c in clientes:
+        cid = c.get("id", "S/ID")
+        cnome = c.get("nome", "Sem Nome")
+        camarelho = c.get("modeloaparelho", "Sem Aparelho")
+        rotulo = f"ID: {cid} - {cnome} ({camarelho})"
+        opcoes_nf_dict[rotulo] = c
+
+      escolha_cli_nf_label = st.selectbox(
+          "Selecione o Cliente para faturamento:", list(opcoes_nf_dict.keys())
       )
 
-      if escolha_cli_nf:
-        id_cli_nf = int(escolha_cli_nf.split(" - ")[0])
-        cli_nf = next((c for c in clientes if c.get("id") == id_cli_nf), None)
+      if escolha_cli_nf_label:
+        cli_nf = opcoes_nf_dict[escolha_cli_nf_label]
 
         if cli_nf:
           with st.form("form_emissao_nf"):
@@ -651,9 +688,9 @@ elif menu == "🧾 Gerar Nota Fiscal (PDF)":
                 "Discriminação dos Serviços Executados:",
                 value=(
                     f"Serviço técnico especializado prestado no equipamento"
-                    f" {cli_nf.get('tipoaparelho')} -"
-                    f" {cli_nf.get('modeloaparelho')} (Série/IMEI:"
-                    f" {cli_nf.get('numeroserieimei')})."
+                    f" {cli_nf.get('tipoaparelho', '')} -"
+                    f" {cli_nf.get('modeloaparelho', '')} (Série/IMEI:"
+                    f" {cli_nf.get('numeroserieimei', '')})."
                 ),
             )
 
@@ -691,7 +728,6 @@ elif menu == "🧾 Gerar Nota Fiscal (PDF)":
             buffer_nf = io.BytesIO()
             p = canvas.Canvas(buffer_nf, pagesize=letter)
 
-            # Cabeçalho da NF
             p.setFont("Helvetica-Bold", 14)
             p.drawString(
                 50, 750, "PREFEITURA MUNICIPAL • NOTA FISCAL DE SERVIÇOS (NFS-e)"
@@ -703,37 +739,33 @@ elif menu == "🧾 Gerar Nota Fiscal (PDF)":
             )
             p.line(50, 712, 560, 712)
 
-            # Dados da Nota
             p.setFont("Helvetica-Bold", 11)
             p.drawString(50, 692, f"Nota Fiscal Nº: {numero_nf}")
             p.setFont("Helvetica", 10)
             p.drawString(300, 692, f"Data/Hora Emissão: {data_emissao}")
             p.drawString(50, 677, f"Natureza da Operação: {natureza_operacao}")
 
-            # Tomador
             p.line(50, 667, 560, 667)
             p.setFont("Helvetica-Bold", 11)
             p.drawString(50, 647, "IDENTIFICAÇÃO DO TOMADOR DE SERVIÇOS")
             p.setFont("Helvetica", 10)
-            p.drawString(50, 627, f"Nome/Razão Social: {cli_nf.get('nome')}")
+            p.drawString(
+                50, 627, f"Nome/Razão Social: {cli_nf.get('nome', '')}"
+            )
             p.drawString(50, 612, f"CPF/CNPJ: {doc_cliente}")
-            p.drawString(50, 597, f"Endereço: {cli_nf.get('endereco')}")
-            p.drawString(300, 597, f"Telefone: {cli_nf.get('telefone')}")
+            p.drawString(50, 597, f"Endereço: {cli_nf.get('endereco', '')}")
+            p.drawString(300, 597, f"Telefone: {cli_nf.get('telefone', '')}")
 
-            # Discriminação
             p.line(50, 582, 560, 582)
             p.setFont("Helvetica-Bold", 11)
             p.drawString(50, 562, "DISCRIMINAÇÃO DOS SERVIÇOS")
-            p.setFont("Helvetica", 10)
 
-            # Quebra simples do texto de discriminação no PDF se for longo
             text_object = p.beginText(50, 542)
             text_object.setFont("Helvetica", 10)
             for linha in discriminacao.split("\n"):
               text_object.textLine(linha)
             p.drawText(text_object)
 
-            # Valores e Impostos
             p.line(50, 440, 560, 440)
             p.setFont("Helvetica-Bold", 11)
             p.drawString(50, 420, "VALORES E TRIBUTOS")
@@ -748,7 +780,6 @@ elif menu == "🧾 Gerar Nota Fiscal (PDF)":
                 f" {val_iss:.2f}",
             )
 
-            # Rodapé
             p.line(50, 330, 560, 330)
             p.setFont("Helvetica-Oblique", 8)
             p.drawString(
