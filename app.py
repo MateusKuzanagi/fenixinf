@@ -384,7 +384,6 @@ elif menu == "📄 Ordens de Serviço & Venda de Peças":
             "🖨️ Compilar e Salvar O.S."
         )
 
-      # Processamento fora do form para capturar dinamicamente os inputs de quantidade sem erro de chave
       if btn_gerar_pdf_venda:
         qtd_por_produto = {}
         total_pecas = 0.0
@@ -392,8 +391,6 @@ elif menu == "📄 Ordens de Serviço & Venda de Peças":
         if produtos_escolhidos:
           for prod_label in produtos_escolhidos:
             p_obj = opcoes_prod[prod_label]
-            max_estoque = int(p_obj.get("qtdestoque", 0))
-            # Quantidade fixa padrão ou controlada
             q_venda = 1
             qtd_por_produto[p_obj.get("id")] = {
                 "obj": p_obj,
@@ -404,7 +401,6 @@ elif menu == "📄 Ordens de Serviço & Venda de Peças":
 
         valor_total_geral = valor_mao_obra + total_pecas
 
-        # Atualiza o estoque no Supabase para cada peça vendida
         for pid_str, info in qtd_por_produto.items():
           p_obj = info["obj"]
           qtd_vendida = info["qtd"]
@@ -414,7 +410,6 @@ elif menu == "📄 Ordens de Serviço & Venda de Peças":
               {"qtdestoque": max(0, novo_estoque)}
           ).eq("id", pid_str).execute()
 
-        # Gera o PDF da OS com os itens e observações
         buffer = io.BytesIO()
         p = canvas.Canvas(buffer, pagesize=letter)
 
@@ -499,7 +494,7 @@ elif menu == "📄 Ordens de Serviço & Venda de Peças":
     st.error(f"Erro ao processar Ordem de Serviço e Venda: {e}")
 
 # ==========================================
-# 6. GERAR NOTA FISCAL (PDF)
+# 6. GERAR NOTA FISCAL (PDF) - CORRIGIDA E COMPLETA
 # ==========================================
 elif menu == "🧾 Gerar Nota Fiscal (PDF)":
   st.markdown("## 🧾 Emissor de Nota Fiscal de Serviços (PDF)")
@@ -509,40 +504,93 @@ elif menu == "🧾 Gerar Nota Fiscal (PDF)":
     clientes = res.data or []
     if clientes:
       opcoes_nf_dict = {
-          f"ID: {c.get('id')} - {c.get('nome')}": c for c in clientes
+          f"ID: {c.get('id')} - {c.get('nome')} ({c.get('modeloaparelho', 'Sem Aparelho')})": c
+          for c in clientes
       }
       escolha_nf = st.selectbox(
-          "Selecione o Cliente:", list(opcoes_nf_dict.keys())
+          "Selecione o Cliente para a Nota Fiscal:",
+          list(opcoes_nf_dict.keys()),
       )
       cli_nf = opcoes_nf_dict[escolha_nf]
 
       with st.form("form_emissao_nf"):
-        val_serv = st.number_input(
-            "Valor dos Serviços (R$):", value=150.0, format="%.2f"
-        )
-        submitted = st.form_submit_button("Preparar Nota Fiscal PDF")
+        st.subheader("📋 Informações da Nota Fiscal")
+        c1, c2 = st.columns(2)
+        with c1:
+          desc_servico = st.text_area(
+              "Descrição / Discriminação dos Serviços:",
+              value=(
+                  "Prestação de serviços técnicos especializados e manutenção"
+                  " de equipamentos."
+              ),
+          )
+        with c2:
+          val_serv = st.number_input(
+              "Valor dos Serviços (R$):", min_value=0.0, value=150.0, format="%.2f"
+          )
+          forma_pagto = st.selectbox(
+              "Forma de Pagamento:", ["Pix", "Dinheiro", "Cartão de Crédito", "Cartão de Débito", "Boleto"]
+          )
 
-      if submitted or "gerar_nf_pdf" in st.session_state:
+        submitted_nf = st.form_submit_button("Preparar Nota Fiscal PDF")
+
+      if submitted_nf or "gerar_nf_pdf" in st.session_state:
         st.session_state.gerar_nf_pdf = True
 
         buffer_nf = io.BytesIO()
         p = canvas.Canvas(buffer_nf, pagesize=letter)
-        p.setFont("Helvetica-Bold", 12)
+
+        # Cabeçalho da Nota Fiscal
+        p.setFont("Helvetica-Bold", 14)
+        p.drawString(50, 750, "FÊNIX • GESTÃO TECNOLÓGICA")
+        p.setFont("Helvetica", 9)
+        p.drawString(50, 735, "NOTA FISCAL DE PRESTAÇÃO DE SERVIÇOS (NFS-e)")
+        p.line(50, 725, 560, 725)
+
+        # Dados do Tomador / Cliente
+        p.setFont("Helvetica-Bold", 11)
+        p.drawString(50, 700, "1. Dados do Tomador de Serviços:")
+        p.setFont("Helvetica", 10)
+        p.drawString(50, 682, f"Nome / Razão Social: {cli_nf.get('nome', '')}")
+        p.drawString(50, 667, f"Telefone / Contato: {cli_nf.get('telefone', '')}")
+        p.drawString(50, 652, f"Endereço: {cli_nf.get('endereco', 'Não informado')}")
         p.drawString(
             50,
-            750,
-            f"NOTA FISCAL DE SERVIÇOS - Tomador: {cli_nf.get('nome')}",
+            637,
+            f"Referência Aparelho: {cli_nf.get('modeloaparelho', 'N/A')}",
         )
-        p.drawString(50, 730, f"Valor Total: R$ {val_serv:.2f}")
+
+        # Descriminação dos Serviços
+        p.setFont("Helvetica-Bold", 11)
+        p.drawString(50, 607, "2. Discriminação dos Serviços:")
+        p.setFont("Helvetica", 10)
+        p.drawString(50, 589, f"- {desc_servico}")
+
+        # Valores e Pagamento
+        p.line(50, 530, 560, 530)
+        p.setFont("Helvetica-Bold", 11)
+        p.drawString(
+            50,
+            510,
+            f"Valor Total dos Serviços: R$ {val_serv:.2f}",
+        )
+        p.setFont("Helvetica", 10)
+        p.drawString(50, 492, f"Forma de Pagamento: {forma_pagto}")
+        p.drawString(
+            50,
+            477,
+            f"Data de Emissão: {datetime.now().strftime('%d/%m/%Y às %H:%M')}",
+        )
+
         p.showPage()
         p.save()
         buffer_nf.seek(0)
 
-        st.success("🎉 Nota Fiscal pronta para download!")
+        st.success("🎉 Nota Fiscal gerada com todos os dados e pronta para download!")
         st.download_button(
             label="📥 Baixar Nota Fiscal em PDF",
             data=buffer_nf,
-            file_name="Nota_Fiscal.pdf",
+            file_name=f"Nota_Fiscal_{cli_nf.get('id', 'geral')}.pdf",
             mime="application/pdf",
         )
   except Exception as e:
