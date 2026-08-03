@@ -8,50 +8,10 @@ import streamlit as st
 from supabase import Client, create_client
 
 # ==========================================
-# CONFIGURAÇÃO DA PÁGINA E DESIGN CLEAN (MODERNO E PROFISSIONAL)
+# CONFIGURAÇÃO DA PÁGINA
 # ==========================================
 st.set_page_config(
     page_title="Fênix • Gestão Tecnológica", page_icon="⚡", layout="wide"
-)
-
-st.markdown(
-    """
-    <style>
-        .main {
-            background-color: #f8fafc;
-            color: #0f172a;
-        }
-        .metric-card {
-            background: #ffffff;
-            border: 1px solid #e2e8f0;
-            border-left: 4px solid #2563eb;
-            padding: 20px;
-            border-radius: 10px;
-            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
-            text-align: center;
-        }
-        [data-testid="stSidebar"] {
-            background-color: #ffffff;
-            border-right: 1px solid #e2e8f0;
-        }
-        [data-testid="stSidebar"] * {
-            color: #1e293b !important;
-        }
-        .stButton>button {
-            border-radius: 6px;
-            font-weight: 600;
-            background-color: #2563eb;
-            color: white;
-            border: none;
-            padding: 0.5rem 1rem;
-            box-shadow: 0 2px 4px rgba(37, 99, 235, 0.2);
-        }
-        .stButton>button:hover {
-            background-color: #1d4ed8;
-        }
-    </style>
-""",
-    unsafe_allow_html=True,
 )
 
 URL: str = "https://umkfhbyuawnymnltsdka.supabase.co"
@@ -80,8 +40,7 @@ if not st.session_state.autenticado:
   with col2:
     st.markdown("<br><br>", unsafe_allow_html=True)
     st.markdown(
-        "<h2 style='text-align: center; color: #1e293b;'>⚡ Fênix • Gestão"
-        " Tecnológica</h2>",
+        "<h2 style='text-align: center;'>⚡ Fênix • Gestão Tecnológica</h2>",
         unsafe_allow_html=True,
     )
     with st.form("form_login"):
@@ -97,11 +56,10 @@ if not st.session_state.autenticado:
   st.stop()
 
 # ==========================================
-# MENU LATERAL LIMPO E ORGANIZADO
+# MENU LATERAL SIMPLIFICADO
 # ==========================================
 st.sidebar.markdown(
-    "<h3 style='color: #2563eb; text-align: center;'>⚡ FÊNIX TECH</h3>",
-    unsafe_allow_html=True,
+    "<h3 style='text-align: center;'>⚡ FÊNIX TECH</h3>", unsafe_allow_html=True
 )
 st.sidebar.markdown("---")
 
@@ -113,12 +71,12 @@ menu = st.sidebar.radio(
         "👥 Clientes & Cadastros",
         "📄 Ordem de Serviço",
         "🧾 Nota Fiscal (PDF)",
-        "💬 WhatsApp & Histórico",
+        "💬 Histórico & WhatsApp",
     ],
 )
 
 st.sidebar.markdown("---")
-if st.sidebar.button("🚪 Sair do Sistema"):
+if st.sidebar.button("🚪 Sair do Sistema", use_container_width=True):
   st.session_state.autenticado = False
   st.rerun()
 
@@ -143,25 +101,11 @@ if menu == "📊 Dashboard Geral":
 
     c1, c2, c3 = st.columns(3)
     with c1:
-      st.markdown(
-          f"""<div class='metric-card'><h4 style='color: #64748b;'>📦 Total de"
-          " Produtos</h4><h2 style='color:"
-          f" #2563eb;'>{total_produtos}</h2></div>""",
-          unsafe_allow_html=True,
-      )
+      st.metric("📦 Total de Produtos", total_produtos)
     with c2:
-      st.markdown(
-          f"""<div class='metric-card'><h4 style='color: #64748b;'>👥 Total de"
-          " Clientes</h4><h2 style='color: #2563eb;'>{total_clientes}</h2></div>""",
-          unsafe_allow_html=True,
-      )
+      st.metric("👥 Total de Clientes", total_clientes)
     with c3:
-      st.markdown(
-          f"""<div class='metric-card'><h4 style='color: #64748b;'>💰 Valor em"
-          " Estoque</h4><h2 style='color: #2563eb;'>R$"
-          f" {val_estoque:,.2f}</h2></div>""",
-          unsafe_allow_html=True,
-      )
+      st.metric("💰 Valor em Estoque", f"R$ {val_estoque:,.2f}")
 
     st.markdown("<br>", unsafe_allow_html=True)
     st.subheader("⚠️ Alertas Críticos de Reposição (Estoque <= 2)")
@@ -179,7 +123,7 @@ if menu == "📊 Dashboard Geral":
     st.error(f"Erro ao carregar dashboard: {e}")
 
 # ==========================================
-# 2. PRODUTOS & ESTOQUE (CADASTRO E EDIÇÃO UNIFICADOS)
+# 2. PRODUTOS & ESTOQUE
 # ==========================================
 elif menu == "📦 Produtos & Estoque":
   st.markdown("## 📦 Gestão de Produtos e Estoque")
@@ -195,7 +139,7 @@ elif menu == "📦 Produtos & Estoque":
       preco = st.number_input("Preço (R$)", min_value=0.0, format="%.2f")
       qtd = st.number_input("Quantidade em Estoque", min_value=0, step=1)
       desc = st.text_input("Descrição Opcional").strip()
-      if st.form_submit_button("💾 Salvar Produto"):
+      if st.form_submit_button("💾 Salvar Produto", use_container_width=True):
         if pid and nome:
           supabase.table("Produtos").insert({
               "id": pid,
@@ -242,7 +186,7 @@ elif menu == "👥 Clientes & Cadastros":
       tel_c = st.text_input("Telefone / WhatsApp").strip()
       end_c = st.text_input("Endereço").strip()
       m_ap = st.text_input("Modelo do Aparelho").strip()
-      if st.form_submit_button("💾 Salvar Cliente"):
+      if st.form_submit_button("💾 Salvar Cliente", use_container_width=True):
         if nome_c:
           supabase.table("Clientes").insert({
               "nome": nome_c,
@@ -274,8 +218,8 @@ elif menu == "👥 Clientes & Cadastros":
 elif menu == "📄 Ordem de Serviço":
   st.markdown("## 📄 Ordem de Serviço & Venda de Peças")
   st.markdown(
-      "Selecione o cliente, adicione peças do estoque com baixa automática e"
-      " gere o PDF completo."
+      "Selecione o cliente, defina a forma de pagamento, adicione peças com"
+      " baixa automática e gere o PDF."
   )
   st.markdown("---")
 
@@ -296,7 +240,7 @@ elif menu == "📄 Ordem de Serviço":
       cli_os = opcoes_os_dict[escolha_os_label]
 
       with st.form("form_os_completa"):
-        st.subheader("🛠️ Laudo e Informações Técnicas")
+        st.subheader("🛠️ Laudo, Pagamento e Informações Técnicas")
         c1, c2 = st.columns(2)
         with c1:
           defeito_relatado = st.text_area(
@@ -313,6 +257,16 @@ elif menu == "📄 Ordem de Serviço":
               min_value=0.0,
               value=120.0,
               format="%.2f",
+          )
+          forma_pagto = st.selectbox(
+              "Forma de Pagamento:",
+              [
+                  "Pix",
+                  "Dinheiro",
+                  "Débito",
+                  "Crédito",
+                  "A Prazo",
+              ],
           )
           prazo_entrega = st.text_input(
               "Prazo Estimado de Entrega:", value="2 dias úteis"
@@ -334,11 +288,14 @@ elif menu == "📄 Ordem de Serviço":
               "Selecione as peças utilizadas:", list(opcoes_prod.keys())
           )
 
-        btn_gerar_os = st.form_submit_button("🖨️ Compilar e Salvar O.S.")
+        btn_gerar_os = st.form_submit_button(
+            "🖨️ Compilar e Salvar O.S.", use_container_width=True
+        )
 
       if btn_gerar_os:
         qtd_por_produto = {}
         total_pecas = 0.0
+        lista_nomes_pecas = []
 
         if produtos_escolhidos:
           for prod_label in produtos_escolhidos:
@@ -350,6 +307,7 @@ elif menu == "📄 Ordem de Serviço":
                 "subtotal": float(p_obj.get("preco", 0)) * q_venda,
             }
             total_pecas += float(p_obj.get("preco", 0)) * q_venda
+            lista_nomes_pecas.append(f"{q_venda}x {p_obj.get('nomeproduto')}")
 
         valor_total_geral = valor_mao_obra + total_pecas
 
@@ -360,12 +318,31 @@ elif menu == "📄 Ordem de Serviço":
               {"qtdestoque": max(0, novo_estoque)}
           ).eq("id", pid_str).execute()
 
+        # Salva o atendimento na tabela de histórico para consulta unificada
+        try:
+          supabase.table("HistoricoAtendimentos").insert({
+              "cliente_id": str(cli_os.get("id")),
+              "cliente_nome": cli_os.get("nome"),
+              "tipo": "Ordem de Serviço",
+              "detalhes": (
+                  f"Defeito: {defeito_relatado} | Serviço: {laudo_tecnico} |"
+                  f" Peças: {', '.join(lista_nomes_pecas) if lista_nomes_pecas else 'Nenhuma'}"
+              ),
+              "valor": valor_total_geral,
+              "pagamento": forma_pagto,
+              "data": datetime.now().strftime("%d/%m/%Y %H:%M"),
+          }).execute()
+        except Exception:
+          pass  # Se a tabela não existir, apenas prossegue com o PDF
+
         buffer = io.BytesIO()
         p = canvas.Canvas(buffer, pagesize=letter)
         p.setFont("Helvetica-Bold", 14)
         p.drawString(50, 750, "FÊNIX • ASSISTÊNCIA TÉCNICA ESPECIALIZADA")
         p.setFont("Helvetica", 9)
-        p.drawString(50, 735, "Ordem de Serviço & Venda de Peças")
+        p.drawString(
+            50, 735, f"Ordem de Serviço • Pagamento: {forma_pagto}"
+        )
         p.line(50, 725, 560, 725)
 
         p.setFont("Helvetica-Bold", 11)
@@ -411,7 +388,7 @@ elif menu == "📄 Ordem de Serviço":
             50,
             y_pos,
             f"Mão de Obra: R$ {valor_mao_obra:.2f} | Peças: R$ {total_pecas:.2f}"
-            f" | Total Geral: R$ {valor_total_geral:.2f}",
+            f" | Total: R$ {valor_total_geral:.2f} ({forma_pagto})",
         )
         y_pos -= 20
         p.setFont("Helvetica", 10)
@@ -421,12 +398,13 @@ elif menu == "📄 Ordem de Serviço":
         p.save()
         buffer.seek(0)
 
-        st.success("🎉 O.S. gerada com sucesso e estoque atualizado!")
+        st.success("🎉 O.S. gerada com sucesso, salva no histórico e estoque baixado!")
         st.download_button(
             label="📥 Baixar PDF da Ordem de Serviço",
             data=buffer,
             file_name=f"OS_Cliente_{cli_os.get('id', 'geral')}.pdf",
             mime="application/pdf",
+            use_container_width=True,
         )
     else:
       st.info("Cadastre clientes para emitir Ordens de Serviço.")
@@ -469,20 +447,45 @@ elif menu == "🧾 Nota Fiscal (PDF)":
               "Valor dos Serviços (R$):", min_value=0.0, value=150.0, format="%.2f"
           )
           forma_pagto = st.selectbox(
-              "Forma de Pagamento:", ["Pix", "Dinheiro", "Cartão de Crédito", "Cartão de Débito", "Boleto"]
+              "Forma de Pagamento:",
+              [
+                  "Pix",
+                  "Dinheiro",
+                  "Débito",
+                  "Crédito",
+                  "A Prazo",
+              ],
           )
 
-        submitted_nf = st.form_submit_button("Preparar Nota Fiscal PDF")
+        submitted_nf = st.form_submit_button(
+            "Preparar Nota Fiscal PDF", use_container_width=True
+        )
 
       if submitted_nf or "gerar_nf_pdf" in st.session_state:
         st.session_state.gerar_nf_pdf = True
+
+        # Salva o atendimento na tabela de histórico
+        try:
+          supabase.table("HistoricoAtendimentos").insert({
+              "cliente_id": str(cli_nf.get("id")),
+              "cliente_nome": cli_nf.get("nome"),
+              "tipo": "Nota Fiscal",
+              "detalhes": desc_servico,
+              "valor": val_serv,
+              "pagamento": forma_pagto,
+              "data": datetime.now().strftime("%d/%m/%Y %H:%M"),
+          }).execute()
+        except Exception:
+          pass
 
         buffer_nf = io.BytesIO()
         p = canvas.Canvas(buffer_nf, pagesize=letter)
         p.setFont("Helvetica-Bold", 14)
         p.drawString(50, 750, "FÊNIX • GESTÃO TECNOLÓGICA")
         p.setFont("Helvetica", 9)
-        p.drawString(50, 735, "NOTA FISCAL DE PRESTAÇÃO DE SERVIÇOS (NFS-e)")
+        p.drawString(
+            50, 735, f"NOTA FISCAL (NFS-e) • Pagamento: {forma_pagto}"
+        )
         p.line(50, 725, 560, 725)
 
         p.setFont("Helvetica-Bold", 11)
@@ -511,13 +514,12 @@ elif menu == "🧾 Nota Fiscal (PDF)":
         p.drawString(
             50,
             510,
-            f"Valor Total dos Serviços: R$ {val_serv:.2f}",
+            f"Valor Total dos Serviços: R$ {val_serv:.2f} ({forma_pagto})",
         )
         p.setFont("Helvetica", 10)
-        p.drawString(50, 492, f"Forma de Pagamento: {forma_pagto}")
         p.drawString(
             50,
-            477,
+            492,
             f"Data de Emissão: {datetime.now().strftime('%d/%m/%Y às %H:%M')}",
         )
 
@@ -525,12 +527,13 @@ elif menu == "🧾 Nota Fiscal (PDF)":
         p.save()
         buffer_nf.seek(0)
 
-        st.success("🎉 Nota Fiscal gerada e pronta para download!")
+        st.success("🎉 Nota Fiscal gerada, salva no histórico e pronta para download!")
         st.download_button(
             label="📥 Baixar Nota Fiscal em PDF",
             data=buffer_nf,
             file_name=f"Nota_Fiscal_{cli_nf.get('id', 'geral')}.pdf",
             mime="application/pdf",
+            use_container_width=True,
         )
     else:
       st.info("Cadastre clientes para emitir Notas Fiscais.")
@@ -538,33 +541,101 @@ elif menu == "🧾 Nota Fiscal (PDF)":
     st.error(f"Erro: {e}")
 
 # ==========================================
-# 6. WHATSAPP & HISTÓRICO
+# 6. HISTÓRICO & WHATSAPP (COMPLETO)
 # ==========================================
-elif menu == "💬 WhatsApp & Histórico":
-  st.markdown("## 💬 Envio Rápido via WhatsApp")
+elif menu == "💬 Histórico & WhatsApp":
+  st.markdown("## 💬 Histórico de Compras, Serviços e WhatsApp")
+  st.markdown(
+      "Selecione um cliente para visualizar tudo o que ele já comprou, ordens de"
+      " serviço, peças, formas de pagamento e contato rápido."
+  )
   st.markdown("---")
+
   try:
-    res = supabase.table("Clientes").select("*").execute()
-    clientes = res.data or []
+    res_cli = supabase.table("Clientes").select("*").execute()
+    clientes = res_cli.data or []
+
     if clientes:
       opcoes_hist = {
-          f"ID: {c.get('id')} - {c.get('nome')}": c for c in clientes
+          f"ID: {c.get('id')} - {c.get('nome')} ({c.get('modeloaparelho', 'Sem Aparelho')})": c
+          for c in clientes
       }
       escolha_h = st.selectbox(
           "Selecione o Cliente:", list(opcoes_hist.keys())
       )
       cli_hist = opcoes_hist[escolha_h]
+
+      st.markdown("<br>", unsafe_allow_html=True)
+
+      # Cabeçalho com dados cadastrais do cliente
+      col_info1, col_info2 = st.columns(2)
+      with col_info1:
+        st.markdown(f"**👤 Nome:** {cli_hist.get('nome')}")
+        st.markdown(f"**📞 Telefone:** {cli_hist.get('telefone')}")
+      with col_info2:
+        st.markdown(
+            f"**📍 Endereço:** {cli_hist.get('endereco', 'Não informado')}"
+        )
+        st.markdown(
+            f"**📱 Aparelho:** {cli_hist.get('modeloaparelho', 'Não informado')}"
+        )
+
+      st.markdown("---")
+      st.subheader("📋 Histórico Completo de Compras e Ordens de Serviço")
+
+      # Busca na tabela de histórico unificada
+      try:
+        res_hist = (
+            supabase.table("HistoricoAtendimentos")
+            .select("*")
+            .eq("cliente_id", str(cli_hist.get("id")))
+            .execute()
+        )
+        historico_dados = res_hist.data or []
+      except Exception:
+        historico_dados = []
+
+      if historico_dados:
+        df_hist = pd.DataFrame(historico_dados)
+        # Exibe a tabela organizada
+        st.dataframe(
+            df_hist[[
+                "data",
+                "tipo",
+                "detalhes",
+                "valor",
+                "pagamento",
+            ]],
+            use_container_width=True,
+        )
+
+        # Resumo Financeiro Total por Forma de Pagamento
+        total_geral_cliente = sum(
+            [float(h.get("valor", 0) or 0) for h in historico_dados]
+        )
+        st.markdown(
+            f"### 💰 Total Gasto pelo Cliente: R$ {total_geral_cliente:,.2f}"
+        )
+      else:
+        st.info(
+            "Nenhum registro de atendimento ou compra encontrado para este"
+            " cliente ainda."
+        )
+
+      st.markdown("---")
+      st.subheader("💬 Ações e Envio WhatsApp")
+
       tel = "".join(filter(str.isdigit, str(cli_hist.get("telefone", ""))))
-      msg = f"Olá {cli_hist.get('nome')}, aqui é da Fênix Assistência Técnica! ⚡"
+      msg = f"Olá {cli_hist.get('nome')}, aqui é da Fênix Assistência Técnica! Passando para atualizar sobre o seu atendimento. ⚡"
       link = f"https://wa.me/55{tel}?text={urllib.parse.quote(msg)}"
-      st.markdown(
-          f"""<a href="{link}" target="_blank"><button style="background-color:"
-          "#16a34a; color: white; padding: 0.6rem 1.2rem; border: none;"
-          " border-radius: 6px; font-weight: bold; cursor: pointer;">💬 Abrir"
-          " WhatsApp com Mensagem Pronta</button></a>""",
-          unsafe_allow_html=True,
+
+      st.link_button(
+          "💬 Abrir WhatsApp com Mensagem Pronta",
+          link,
+          use_container_width=True,
       )
+
     else:
-      st.info("Nenhum cliente disponível.")
+      st.info("Nenhum cliente cadastrado no sistema.")
   except Exception as e:
-    st.error(f"Erro: {e}")
+    st.error(f"Erro ao carregar histórico: {e}")
